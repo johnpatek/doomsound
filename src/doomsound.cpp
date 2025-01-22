@@ -76,6 +76,11 @@ namespace doomsound
         _is_open = false;
     }
 
+    bool soundcard::is_open() const
+    {
+        return _is_open;
+    }
+
     void soundcard::play_sfx(const wav_handle &sfx)
     {
         if(Mix_PlayChannel(-1, static_cast<Mix_Chunk *>(sfx.get()), 0) < 0)

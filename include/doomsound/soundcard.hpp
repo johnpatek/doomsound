@@ -17,6 +17,7 @@ namespace doomsound
 
         void open(const std::string &device = default_device);
         void close();
+        bool is_open() const;
 
         void play_sfx(const wav_handle &sfx);
         void play_music(const midi_handle &mus);
