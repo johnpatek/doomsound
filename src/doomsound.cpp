@@ -3,8 +3,6 @@
 #include <SDL.h>
 #include <SDL_mixer.h>
 
-#include <iostream>
-
 namespace doomsound
 {
     template <class Type, Type *(*LoadFunc)(SDL_RWops *, int), void (*FreeFunc)(Type *)>
@@ -12,10 +10,6 @@ namespace doomsound
     {
         SDL_RWops *rw = SDL_RWFromConstMem(data, size);
         Type *opaque = LoadFunc(rw, 1);
-        if(opaque == nullptr)
-        {
-            std::cerr << "bad chunk: " << Mix_GetError() << std::endl;
-        }
         const std::function deleter = [](void *opaque)
         {
             FreeFunc(static_cast<Type *>(opaque));
@@ -33,7 +27,6 @@ namespace doomsound
         return opaque_constructor<Mix_Music, &Mix_LoadMUS_RW, &Mix_FreeMusic>(data, size);
     }
 
-
     std::list<std::string> get_devices()
     {
         std::list<std::string> devices;
@@ -48,22 +41,19 @@ namespace doomsound
     soundcard::soundcard() : _is_open(false) {}
     soundcard::~soundcard()
     {
-        if (_is_open)
-        {
-            close();
-        }
+        close();
     }
 
     void soundcard::open(const std::string &device)
     {
         const char *device_name = device.empty() ? nullptr : device.c_str();
-        if(Mix_OpenAudioDevice(
-            MIX_DEFAULT_FREQUENCY,
-            MIX_DEFAULT_FORMAT,
-            MIX_DEFAULT_CHANNELS,
-            2048,
-            device_name,
-            SDL_AUDIO_ALLOW_ANY_CHANGE) < 0)
+        if (Mix_OpenAudioDevice(
+                MIX_DEFAULT_FREQUENCY,
+                MIX_DEFAULT_FORMAT,
+                MIX_DEFAULT_CHANNELS,
+                2048,
+                device_name,
+                SDL_AUDIO_ALLOW_ANY_CHANGE) < 0)
         {
             std::cerr << "Mix_OpenAudio: " << Mix_GetError() << std::endl;
         }
@@ -72,8 +62,11 @@ namespace doomsound
 
     void soundcard::close()
     {
-        Mix_CloseAudio();
-        _is_open = false;
+        if (_is_open)
+        {
+            Mix_CloseAudio();
+            _is_open = false;
+        }
     }
 
     bool soundcard::is_open() const
@@ -83,7 +76,7 @@ namespace doomsound
 
     void soundcard::play_sfx(const wav_handle &sfx)
     {
-        if(Mix_PlayChannel(-1, static_cast<Mix_Chunk *>(sfx.get()), 0) < 0)
+        if (Mix_PlayChannel(-1, static_cast<Mix_Chunk *>(sfx.get()), 0) < 0)
         {
             std::cerr << "Mix_PlayChannel: " << Mix_GetError() << std::endl;
         }
